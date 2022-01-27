@@ -54,7 +54,7 @@ public final class Lexer {
     public Token lexToken() {
         if (peek("^[a-zA-Z_]") && peek("[a-zA-z0-9_-]?"))
             return lexIdentifier();
-        else if (peek("[+-]?", "[\\d+]") || peek("[\\d+]"))
+        else if (peek("[+-]", "[\\d]") || peek("[\\d]"))
             return lexNumber();
         else if (peek("^'") && peek("'$"))
             return lexCharacter();
@@ -71,8 +71,8 @@ public final class Lexer {
     }
 
     public Token lexNumber() { //if (peek("[+-]?", "[1-9]+","[\\d*]") || peek("[\\d]"))
-        if (peek("[+-]?"))
-            match("[+-]?");
+        if (peek("[+-]"))
+            match("[+-]");
         if (peek("0", "[^.]")){
             match("0");
             return chars.emit(Token.Type.INTEGER);
@@ -136,10 +136,10 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        if (peek("[<= >= != == = ]", "=", "+"))
-            match("[<= >= != == = ]", "=", "+");
+        if (peek(".", "="))
+            match(".", "=");
         else
-            match("[^\\s]");
+            match(".");
         return chars.emit(Token.Type.OPERATOR);
     }
 

@@ -117,8 +117,8 @@ public class LexerTests {
 
     private static Stream<Arguments> testCharacter() {
         return Stream.of(
-                Arguments.of("Single", "\''\'", false),
-                Arguments.of("Newline", "\'\\n\'", false),
+                Arguments.of("Single", "\'", false),
+                Arguments.of("Newline", "\\n", false),
 
                 // Example Matching Test Cases
                 Arguments.of("Alphabetic", "\'c\'", true),
@@ -181,7 +181,7 @@ public class LexerTests {
                 Arguments.of("Literal Newline", "\"Written \n on two lines\"", false),
                 Arguments.of("Trailing Text", "\"My precious!\" — Gollum", false),
                 Arguments.of("wierd quotes", "\'\"\'string\"\'\"", false),
-                Arguments.of("Unterminated", "\"unterminated\\n\"", false)
+                Arguments.of("Unterminated", "\"unterminated \\n", false)
         );
     }
 
