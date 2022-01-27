@@ -70,9 +70,13 @@ public final class Lexer {
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
-    public Token lexNumber() {
+    public Token lexNumber() { //if (peek("[+-]?", "[1-9]+","[\\d*]") || peek("[\\d]"))
         if (peek("[+-]?"))
             match("[+-]?");
+        if (peek("0", "[^.]")){
+            match("0");
+            return chars.emit(Token.Type.INTEGER);
+        }
         while (peek("\\d+"))
             match("\\d+");
         if (peek("\\.{1}", "\\d+")) {
@@ -85,6 +89,8 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
+        if (peek("\''\'"))
+            throw new ParseException("invalid char", chars.index);
         if (peek("'"))
             match("'");
         if (peek("'$"))
@@ -106,6 +112,8 @@ public final class Lexer {
         if (peek("\"&"))
             match("\"$");
         while (peek("[^\"\"$]")) {
+            if (peek("\\n"))
+                throw new ParseException("unterminated string", chars.index);
             if (peek("\\\\"))
                 lexEscape();
             else
@@ -128,10 +136,10 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        if (peek("[<= >= != == =]", "="))
-            match("[<= >= != == =]", "=");
+        if (peek("[<= >= != == = ]", "=", "+"))
+            match("[<= >= != == = ]", "=", "+");
         else
-            match(".");
+            match("[^\\s]");
         return chars.emit(Token.Type.OPERATOR);
     }
 
