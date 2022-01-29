@@ -21,6 +21,11 @@ import java.util.List;
 public final class Lexer {
 
     private final CharStream chars;
+    private static int buffer = 0;
+
+    public static void reset() {
+        buffer = 0;
+    }
 
     public Lexer(String input) {
         chars = new CharStream(input);
@@ -33,7 +38,15 @@ public final class Lexer {
     public List<Token> lex() {
         ArrayList<Token> token = new ArrayList<>();
         do {
-            if (peek("[\\s]")) {
+            if (peek("\\\\", "n")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("[\\s]")) {
                 chars.advance();
                 chars.skip();
             } else
@@ -54,7 +67,7 @@ public final class Lexer {
     public Token lexToken() {
         if (peek("^[a-zA-Z_]") && peek("[a-zA-z0-9_-]?"))
             return lexIdentifier();
-        else if (peek("[+-]?", "[\\d+]") || peek("[\\d+]"))
+        else if (peek("[+-]", "[\\d]") || peek("[\\d]"))
             return lexNumber();
         else if (peek("^'") && peek("'$"))
             return lexCharacter();
@@ -71,8 +84,8 @@ public final class Lexer {
     }
 
     public Token lexNumber() { //if (peek("[+-]?", "[1-9]+","[\\d*]") || peek("[\\d]"))
-        if (peek("[+-]?"))
-            match("[+-]?");
+        if (peek("[+-]"))
+            match("[+-]");
         if (peek("0", "[^.]")){
             match("0");
             return chars.emit(Token.Type.INTEGER);
@@ -136,10 +149,12 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        if (peek("[<= >= != == = ]", "=", "+"))
-            match("[<= >= != == = ]", "=", "+");
-        else
-            match("[^\\s]");
+        if (peek(".", "=")) {
+            match(".", "=");
+        }
+        else{
+            match(".");
+        }
         return chars.emit(Token.Type.OPERATOR);
     }
 
@@ -206,7 +221,7 @@ public final class Lexer {
             int start = index - length;
             skip();
             //System.out.println(type + " " + input.substring(start, index));
-            return new Token(type, input.substring(start, index), start);
+            return new Token(type, input.substring(start, index), start-Lexer.buffer);
         }
 
     }
