@@ -31,12 +31,13 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        ArrayList<Token> token = new ArrayList<>();
+        List<Token> token = new ArrayList<>();
         do {
-            if (peek("[\\s]")) {
+            if (peek("\\s")) {
                 chars.advance();
                 chars.skip();
-            } else
+            }
+            else
                 token.add(lexToken());
         } while (peek("."));
 

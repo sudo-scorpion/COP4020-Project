@@ -181,7 +181,7 @@ public class LexerTests {
                 Arguments.of("Literal Newline", "\"Written \n on two lines\"", false),
                 Arguments.of("Trailing Text", "\"My precious!\" — Gollum", false),
                 Arguments.of("wierd quotes", "\'\"\'string\"\'\"", false),
-                Arguments.of("Unterminated", "\"unterminated \\n", false)
+                Arguments.of("Unterminated", "\"unterminated\n", false)
         );
     }
 
@@ -242,10 +242,25 @@ public class LexerTests {
                         new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
+                )),
+                Arguments.of("Example 3", "LET inc =2;\n", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+                        new Token(Token.Type.IDENTIFIER, "inc", 4),
+                        new Token(Token.Type.OPERATOR, "=", 8),
+                        new Token(Token.Type.INTEGER, "2", 9),
+                        new Token(Token.Type.OPERATOR, ";", 10)
+                )),
+                Arguments.of("Example 4", "testFoo();\n", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "testFoo", 0),
+                        new Token(Token.Type.OPERATOR, "(", 7),
+                        new Token(Token.Type.OPERATOR, ")", 8),
+                        new Token(Token.Type.OPERATOR, ";", 9)
                 ))
+
         );
     }
-
+    @ParameterizedTest
+    @MethodSource
     void testFoo(String test, String input, List<Token> expected) {
         test(input, expected, true);
     }
