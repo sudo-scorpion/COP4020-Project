@@ -38,7 +38,31 @@ public final class Lexer {
     public List<Token> lex() {
         ArrayList<Token> token = new ArrayList<>();
         do {
-            if (peek("\\\\", "n")){
+            if (peek("\\\\", "b")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("\\\\", "r")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("\\\\", "n")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("\\\\", "t")){
                 for (int i = 0; i < 2; i++){
                     chars.advance();
                     chars.skip();
@@ -83,12 +107,11 @@ public final class Lexer {
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
-    public Token lexNumber() { //if (peek("[+-]?", "[1-9]+","[\\d*]") || peek("[\\d]"))
+    public Token lexNumber() {
         if (peek("[+-]"))
             match("[+-]");
-        if (peek("0", "[^.]")){
-            match("0");
-            return chars.emit(Token.Type.INTEGER);
+        if (peek("\\d", "[^.]")){
+            match("\\d");
         }
         while (peek("\\d+"))
             match("\\d+");
@@ -124,9 +147,10 @@ public final class Lexer {
             match("^\"");
         if (peek("\"&"))
             match("\"$");
-        while (peek("[^\"\"$]")) {
+        while (peek("[^\"\"]")) { //removed $
             if (peek("\\n"))
                 throw new ParseException("unterminated string", chars.index);
+
             if (peek("\\\\"))
                 lexEscape();
             else
