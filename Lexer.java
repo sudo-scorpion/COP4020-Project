@@ -89,6 +89,9 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
+        if (chars.index == chars.length){
+            buffer = 0;
+        }
         if (peek("^[a-zA-Z_]") && peek("[a-zA-z0-9_-]?"))
             return lexIdentifier();
         else if (peek("[+-]", "[\\d]") || peek("[\\d]"))
