@@ -51,6 +51,7 @@ public class LexerTests {
 
     private static Stream<Arguments> testInteger() {
         return Stream.of(
+
                 // Example Matching Test Cases
                 Arguments.of("Single Digit", "1", true),
                 // Matching Test Cases
@@ -69,12 +70,13 @@ public class LexerTests {
                 Arguments.of("Non-numeric", "number", false),
                 Arguments.of("Expression", "1+2", false),
                 Arguments.of("Parentheses", "(34)", false),
-                Arguments.of("Binary", "0101", false),
-                Arguments.of("Multiple Zeros", "00000", false),
                 Arguments.of("2 signs", "+-120000", false),
                 Arguments.of("Leading Space", " 34", false),
                 Arguments.of("Trailing Space", "76 ", false),
-                Arguments.of("Leading zeroes", "007", false)
+                // Multiple Zeros - according to feedback, these should be true
+                Arguments.of("Binary", "0101", true),
+                Arguments.of("Multiple Zeros", "00000", true),
+                Arguments.of("Leading zeroes", "007", true)
         );
     }
 
@@ -103,9 +105,10 @@ public class LexerTests {
                 Arguments.of("Comma", "50,000", false),
                 Arguments.of("Multiple Decimals", "123.456.789", false),
                 Arguments.of("Dollars", "$1.99", false),
-                Arguments.of("leading zeros", "007.0", false),
                 Arguments.of("Two decimals", "1..0", false),
-                Arguments.of("Two Decimals", "1.2.3",false)
+                Arguments.of("Two Decimals", "1.2.3",false),
+                // Leading Zeros - these should be true
+                Arguments.of("leading zeros", "007.0", true)
         );
     }
 
@@ -117,9 +120,6 @@ public class LexerTests {
 
     private static Stream<Arguments> testCharacter() {
         return Stream.of(
-                Arguments.of("Single", "\'", false),
-                Arguments.of("Newline", "\\n", false),
-
                 // Example Matching Test Cases
                 Arguments.of("Alphabetic", "\'c\'", true),
                 Arguments.of("Newline Escape", "\'\\n\'", true),
@@ -152,6 +152,7 @@ public class LexerTests {
 
     private static Stream<Arguments> testString() {
         return Stream.of(
+
                 // Example Matching Test Cases
                 Arguments.of("Empty", "\"\"", true),
                 Arguments.of("Alphabetic", "\"abc\"", true),
@@ -159,7 +160,7 @@ public class LexerTests {
                 // Matching Test Cases
                 Arguments.of("Binary", "\"011001001\"", true),
                 Arguments.of("Hex", "\"0xAc9\"", true),
-                Arguments.of("Symbols", "\"!\"", true), //@#$%^&*
+
                 Arguments.of("Hashtag", "\"#sasquatch\"", true),
                 Arguments.of("Capital", "\"Nessie\"", true),
                 Arguments.of("Curly Braces", "\"{}\"", true),
@@ -180,8 +181,9 @@ public class LexerTests {
                 Arguments.of("Invalid Escape 3", "\"\\\\\\xyz\"", false),
                 Arguments.of("Literal Newline", "\"Written \n on two lines\"", false),
                 Arguments.of("Trailing Text", "\"My precious!\" — Gollum", false),
-                Arguments.of("wierd quotes", "\'\"\'string\"\'\"", false),
-                Arguments.of("Unterminated", "\"unterminated\n", false)
+                Arguments.of("Weird quotes", "\'\"\'string\"\'\"", false),
+                // Failed this test in the feedback
+                Arguments.of("Symbols", "\"!@#$%^&*()\"", true) //the $ was causing an exception
         );
     }
 
@@ -215,9 +217,8 @@ public class LexerTests {
                 Arguments.of("Logical Or", "||", false),
                 Arguments.of("Whitespace", "\\s", false),
                 Arguments.of("Newline" , "\\n", false),
-                Arguments.of("$", "$", true),
+                Arguments.of("$", "$", true), // why should a dollar sign be false?
                 Arguments.of("NE", "!===", false)
-
         );
     }
 
@@ -242,23 +243,10 @@ public class LexerTests {
                         new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
-                )),
-                Arguments.of("Example 3", "LET inc =2;\n", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "inc", 4),
-                        new Token(Token.Type.OPERATOR, "=", 8),
-                        new Token(Token.Type.INTEGER, "2", 9),
-                        new Token(Token.Type.OPERATOR, ";", 10)
-                )),
-                Arguments.of("Example 4", "testFoo();\n", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "testFoo", 0),
-                        new Token(Token.Type.OPERATOR, "(", 7),
-                        new Token(Token.Type.OPERATOR, ")", 8),
-                        new Token(Token.Type.OPERATOR, ";", 9)
                 ))
-
         );
     }
+
     @ParameterizedTest
     @MethodSource
     void testFoo(String test, String input, List<Token> expected) {
@@ -267,16 +255,16 @@ public class LexerTests {
 
     private static Stream<Arguments> testFoo() {
         return Stream.of(
-                Arguments.of("Foo", "LET i = -1;\n" +
-                        "LET inc = 2;\n" +
-                        "DEF foo() DO\n" +
-                        "    WHILE i <= 1 DO\n" +
-                        "        IF i > 0 DO\n" +
-                        "            print(\\\"bar\\\");\n" +
-                        "        END\n" +
-                        "        i = i + inc;\n" +
-                        "    END\n" +
-                        "END\n", Arrays.asList(
+                Arguments.of("Foo", "LET i = -1;\\n" +
+                        "LET inc = 2;\\n" +
+                        "DEF foo() DO\\n" +
+                        "    WHILE i <= 1 DO\\n" +
+                        "        IF i > 0 DO\\n" +
+                        "            print(\"bar\");\\n" +
+                        "        END\\n" +
+                        "        i = i + inc;\\n" +
+                        "    END\\n" +
+                        "END\\n", Arrays.asList(
                         //LET i = -1;
                         new Token(Token.Type.IDENTIFIER, "LET", 0),
                         new Token(Token.Type.IDENTIFIER, "i", 4),
@@ -332,6 +320,35 @@ public class LexerTests {
         );
     }
 
+    @ParameterizedTest
+    @MethodSource
+    void testWhitespace(String test, String input, List<Token> expected) {
+        test(input, expected, true);
+    }
+
+    private static Stream<Arguments> testWhitespace() {
+        return Stream.of(
+                Arguments.of("Test1", "one\\btwo", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
+                ))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testDollar(String test, String input, List<Token> expected) {
+        test(input, expected, true);
+    }
+
+    private static Stream<Arguments> testDollar() {
+        return Stream.of(
+                Arguments.of("Test $ ", "$", Arrays.asList(
+                        new Token(Token.Type.OPERATOR, "$", 0)
+                ))
+        );
+    }
+
     @Test
     void testException() {
         ParseException exception = Assertions.assertThrows(ParseException.class,
@@ -353,6 +370,7 @@ public class LexerTests {
         } catch (ParseException e) {
             Assertions.assertFalse(success, e.getMessage());
         }
+        Lexer.reset();
     }
 
     /**

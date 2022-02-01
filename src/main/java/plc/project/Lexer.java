@@ -21,6 +21,11 @@ import java.util.List;
 public final class Lexer {
 
     private final CharStream chars;
+    private static int buffer = 0;
+
+    public static void reset() {
+        buffer = 0;
+    }
 
     public Lexer(String input) {
         chars = new CharStream(input);
@@ -31,13 +36,44 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        List<Token> token = new ArrayList<>();
+        ArrayList<Token> token = new ArrayList<>();
         do {
-            if (peek("\\s")) {
+            if (peek("\\\\", "b")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("\\\\", "r")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("\\\\", "n")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("\\\\", "t")){
+                for (int i = 0; i < 2; i++){
+                    chars.advance();
+                    chars.skip();
+                }
+                // something to fix the index???
+                buffer+=1;
+            }
+            else if (peek("[\\s]")) {
                 chars.advance();
                 chars.skip();
-            }
-            else
+            } else
                 token.add(lexToken());
         } while (peek("."));
 
@@ -53,6 +89,9 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
+        if (chars.index == chars.length){
+            buffer = 0;
+        }
         if (peek("^[a-zA-Z_]") && peek("[a-zA-z0-9_-]?"))
             return lexIdentifier();
         else if (peek("[+-]", "[\\d]") || peek("[\\d]"))
@@ -71,12 +110,11 @@ public final class Lexer {
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
-    public Token lexNumber() { //if (peek("[+-]?", "[1-9]+","[\\d*]") || peek("[\\d]"))
+    public Token lexNumber() {
         if (peek("[+-]"))
             match("[+-]");
-        if (peek("0", "[^.]")){
-            match("0");
-            return chars.emit(Token.Type.INTEGER);
+        if (peek("\\d", "[^.]")){
+            match("\\d");
         }
         while (peek("\\d+"))
             match("\\d+");
@@ -112,9 +150,10 @@ public final class Lexer {
             match("^\"");
         if (peek("\"&"))
             match("\"$");
-        while (peek("[^\"\"$]")) {
+        while (peek("[^\"\"]")) {
             if (peek("\\n"))
                 throw new ParseException("unterminated string", chars.index);
+
             if (peek("\\\\"))
                 lexEscape();
             else
@@ -137,10 +176,12 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        if (peek(".", "="))
+        if (peek(".", "=")) {
             match(".", "=");
-        else
+        }
+        else{
             match(".");
+        }
         return chars.emit(Token.Type.OPERATOR);
     }
 
@@ -207,7 +248,7 @@ public final class Lexer {
             int start = index - length;
             skip();
             //System.out.println(type + " " + input.substring(start, index));
-            return new Token(type, input.substring(start, index), start);
+            return new Token(type, input.substring(start, index), start-Lexer.buffer);
         }
 
     }
