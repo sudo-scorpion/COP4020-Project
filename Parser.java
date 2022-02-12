@@ -377,7 +377,7 @@ public final class Parser {
     private Ast.Expr expressionHelper(Ast.Expr left) {
         String operator = tokens.get(0).getLiteral();
         match(Token.Type.OPERATOR);
-        Ast.Expr right = parseAdditiveExpression();
+        Ast.Expr right = parseLogicalExpression();
         if (!peek(operator)) return new Ast.Expr.Binary(operator, left, right);
         else left = new Ast.Expr.Binary(operator, left, right);
         return left;
