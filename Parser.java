@@ -117,7 +117,7 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO ignore for 2a
+        throw new UnsupportedOperationException(); //TODO
     }
 
     /**
@@ -132,12 +132,20 @@ public final class Parser {
      */
     public Ast.Expr parseLogicalExpression() throws ParseException {
         Ast.Expr left = parseEqualityExpression();
+
+        if(tokens.tokens.size() <= 3){
+            while (peek("AND")||peek("OR")) {
+                String operator = tokens.get(0).getLiteral();
+                match(Token.Type.IDENTIFIER);
+                Ast.Expr right = parseLogicalExpression();
+                if (!peek(operator)) return new Ast.Expr.Binary(operator, left, right);
+                else left = new Ast.Expr.Binary(operator, left, right);
+            }
+            return left;
+        }
+
         while (peek("AND") || peek("OR")) {
-            String operator = tokens.get(0).getLiteral();
-            match(Token.Type.IDENTIFIER);
-            Ast.Expr right = parseEqualityExpression();
-            if (!peek(operator)) return new Ast.Expr.Binary(operator, left, right);
-            else left = new Ast.Expr.Binary(operator, left, right);
+            left = expressionHelper(left);
         }
         return left;
     }
@@ -261,13 +269,12 @@ public final class Parser {
             if (peek(")")) {
                 match(")");
                 return group;
-            } //else {
-            //   if (tokens.has(0)){
-            //   throw new ParseException("Index: ", tokens.get(0).getIndex());
-            // else throw new ParseException("Index:", parseExIndex());
-            //}
+            } else {
+                if (tokens.has(0)) {
+                    throw new ParseException("Index: ", tokens.get(0).getIndex());
+                } else throw new ParseException("Index:", parseExIndex());
+            }
             //  identifier ('(' (expression (',' expression)*)? ')')?
-            throw new ParseException("Index:", parseExIndex());
         } else if (match(Token.Type.IDENTIFIER)) {
             String name = tokens.get(-1).getLiteral();
             //match(Token.Type.IDENTIFIER);
@@ -282,19 +289,15 @@ public final class Parser {
                     }
                 }
                 match(")");
-                //tokens.advance();//bb
                 return new Ast.Expr.Function(Optional.empty(), name, arguments);
             } else {
-                //tokens.advance();//bb
                 return new Ast.Expr.Access(Optional.empty(), name);
             }
         } else {
-            if (tokens.has(0)) { // ? tokens.tokens.size()-1 or -1
-                System.out.println("Foobuzz 291");
+            if (tokens.has(0)) {
                 throw new ParseException("Index: ", tokens.get(0).getIndex());
             }
             else{
-                System.out.println("Foobuzz 293");
                 throw new ParseException("Index: ", parseExIndex());
             }
         }

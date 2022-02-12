@@ -479,37 +479,140 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
                 ),
-                /*
-                // todo this test fails
-                Arguments.of("Binary And",
+                Arguments.of("Secondary And And",
                         Arrays.asList(
-                                //expr1 AND expr2
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "AND", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 10),
-                                new Token(Token.Type.OPERATOR, "AND", 16),
-                                new Token(Token.Type.IDENTIFIER, "expr3", 20)
+                                //A AND B AND C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "AND", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 6),
+                                new Token(Token.Type.OPERATOR, "AND", 8),
+                                new Token(Token.Type.IDENTIFIER, "C", 12)
                         ),
                         new Ast.Expr.Binary("AND",
-                                new Ast.Expr.Access(Optional.empty(), "expr1"),
-                                //new Ast.Expr.Access(Optional.empty(), "AND expr2")
+                                new Ast.Expr.Access(Optional.empty(), "A"),
                                 new Ast.Expr.Binary("AND",
-                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
-                                        new Ast.Expr.Access(Optional.empty(), "expr3")
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
                                 )
                         )
                 ),
-                 */
-                Arguments.of("Boolean And",
+                Arguments.of("Secondary And Or",
                         Arrays.asList(
-                                // TRUE AND TRUE
-                                new Token(Token.Type.IDENTIFIER, "TRUE", 0),
-                                new Token(Token.Type.IDENTIFIER, "AND", 5),
-                                new Token(Token.Type.IDENTIFIER, "TRUE", 9)
+                                //A AND B OR C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "AND", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 6),
+                                new Token(Token.Type.OPERATOR, "OR", 8),
+                                new Token(Token.Type.IDENTIFIER, "C", 11)
                         ),
                         new Ast.Expr.Binary("AND",
-                                new Ast.Expr.Literal(Boolean.TRUE),
-                                new Ast.Expr.Literal(Boolean.TRUE)
+                                new Ast.Expr.Access(Optional.empty(), "A"),
+                                new Ast.Expr.Binary("OR",
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
+                                )
+                        )
+                ),
+                Arguments.of("Secondary And +",
+                        Arrays.asList(
+                                //A AND B + C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "AND", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 6),
+                                new Token(Token.Type.OPERATOR, "+", 8),
+                                new Token(Token.Type.IDENTIFIER, "C", 10)
+                        ),
+                        new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "A"),
+                                new Ast.Expr.Binary("+",
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
+                                )
+                        )
+                ),
+                Arguments.of("Secondary Or Or",
+                        Arrays.asList(
+                                //A OR B OR C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "OR", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 5),
+                                new Token(Token.Type.OPERATOR, "OR", 7),
+                                new Token(Token.Type.IDENTIFIER, "C", 10)
+                        ),
+                        new Ast.Expr.Binary("OR",
+                                new Ast.Expr.Access(Optional.empty(), "A"),
+                                new Ast.Expr.Binary("OR",
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
+                                )
+                        )
+                ),
+                Arguments.of("Secondary Or And",
+                        Arrays.asList(
+                                // A OR B AND C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "OR", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 5),
+                                new Token(Token.Type.OPERATOR, "AND", 7),
+                                new Token(Token.Type.IDENTIFIER, "C", 11)
+                        ),
+                        new Ast.Expr.Binary("OR",
+                                new Ast.Expr.Access(Optional.empty(), "A"),
+                                new Ast.Expr.Binary("AND",
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
+                                )
+                        )
+                ),
+                Arguments.of("Secondary == Or",
+                        Arrays.asList(
+                                // A == B OR C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "==", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 5),
+                                new Token(Token.Type.OPERATOR, "OR", 7),
+                                new Token(Token.Type.IDENTIFIER, "C", 10)
+                        ),
+                        new Ast.Expr.Binary("==",
+                                new Ast.Expr.Access(Optional.empty(), "A"),
+                                new Ast.Expr.Binary("OR",
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
+                                )
+                        )
+                ),
+                Arguments.of("Secondary != And",
+                        Arrays.asList(
+                                //A != B AND C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "!=", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 5),
+                                new Token(Token.Type.OPERATOR, "AND", 7),
+                                new Token(Token.Type.IDENTIFIER, "C", 11)
+                        ),
+                        new Ast.Expr.Binary("!=",
+                                new Ast.Expr.Access(Optional.empty(), "A"),
+                                new Ast.Expr.Binary("AND",
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
+                                )
+                        )
+                ),
+                Arguments.of("Secondary + - ",
+                        Arrays.asList(
+                                //A + B - C
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "+", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 5),
+                                new Token(Token.Type.OPERATOR, "-", 7),
+                                new Token(Token.Type.IDENTIFIER, "C", 11)
+                        ),
+                        new Ast.Expr.Binary("+",
+                                new Ast.Expr.Access(Optional.empty(), "A"),
+                                new Ast.Expr.Binary("-",
+                                        new Ast.Expr.Access(Optional.empty(), "B"),
+                                        new Ast.Expr.Access(Optional.empty(), "C")
+                                )
                         )
                 )
         );
@@ -538,8 +641,18 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "field", 4)
                         ),
                         new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "field")
-                )
+                ),
+                Arguments.of("Field Access 2",
+                        Arrays.asList(
+                                //obj.field
+                                new Token(Token.Type.IDENTIFIER, "obj", 0),
+                                new Token(Token.Type.OPERATOR, ".", 3),
+                                new Token(Token.Type.IDENTIFIER, "field", 4)
+                        ),
+                        //new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.of("foo"), "obj")), "field")
+                        new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "field")
 
+                )
         );
     }
 
