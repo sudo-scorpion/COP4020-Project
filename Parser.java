@@ -21,16 +21,25 @@ import java.util.Optional;
  */
 
 public final class Parser {
-
     private final TokenStream tokens;
-
     public Parser(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
     }
 
     //Parses the {@code source} rule.
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Field> field = new ArrayList<>();
+        List<Ast.Method> method = new ArrayList<>();
+
+        if (tokens.tokens.size() ==0){
+            throw new ParseException("Expected Input", 0);
+        }
+        if (peek("LET"))
+            field.add(parseField());
+        if (peek("DEF"))
+            method.add(parseMethod());
+
+        return new Ast.Source(field, method);
     }
 
     /**
@@ -38,7 +47,21 @@ public final class Parser {
      * next tokens start a field, aka {@code LET}.
      */
     public Ast.Field parseField() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("LET");
+
+        if (!match(Token.Type.IDENTIFIER)){
+            throw new ParseException("Expected identifier", tokens.get(0).getIndex());
+        }
+        String name = tokens.get(-1).getLiteral();
+        Optional<Ast.Expr> value = Optional.empty();
+
+        if (match("=")){
+            value = Optional.of(parseExpression());
+        }
+        if (!match(";")){
+            throw new ParseException("expected semicolon", tokens.get(0).getIndex());
+        }
+        return new Ast.Field(name, value);
     }
 
     /**
@@ -46,7 +69,28 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Method parseMethod() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("DEF");
+
+        if (!match(Token.Type.IDENTIFIER)){
+            throw new ParseException("Expected identifier", tokens.get(0).getIndex());
+        }
+        String name = tokens.get(-1).getLiteral();
+        List<String> parameters = new ArrayList<>();
+        List<Ast.Stmt> stmt = new ArrayList<>();
+
+        if(match(Token.Type.IDENTIFIER)){
+            parameters.add(tokens.get(-1).getLiteral());
+        }
+
+        if(!match("DO"))
+            throw new ParseException("Expected DO", tokens.get(0).getIndex());
+
+        stmt.add(parseStatement());
+
+        if(!match("END"))
+            throw new ParseException("Expected END", tokens.get(0).getIndex());
+
+        return new Ast.Method(name, parameters, stmt);
     }
 
     /**
@@ -55,23 +99,40 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Stmt parseStatement() throws ParseException {
-        Ast.Expr name = parseExpression();
-        // name = value;
-        if (peek("=") || peek(";")) {
-            if (peek("=")) {
-                match("=");
-                Ast.Expr value = parseExpression();
-                return new Ast.Stmt.Assignment(name, value);
-            } else {
-                // name()
-                match(";");
-                return new Ast.Stmt.Expression(name);
+
+        if (peek("LET")){
+            return parseDeclarationStatement();
+        } else if (peek("IF")){
+            return parseIfStatement();
+        } else if (peek("FOR")){
+           return parseForStatement();
+        } else if (peek("WHILE")){
+           return parseWhileStatement();
+        } else if (peek("RETURN")){
+            return parseReturnStatement();
+        } else{
+            Ast.Expr name = parseExpression();
+
+            if (!match(";")){
+                throw new ParseException("Expected semincolon.", tokens.get(0).getIndex());
             }
-        } else {
-            if (tokens.has(0))
-                throw new ParseException("Index: ", tokens.get(0).getIndex());
-            else
-                throw new ParseException("Index: ", parseExIndex());
+            // name = value;
+            if (peek("=") || peek(";")) {
+                if (peek("=")) {
+                    match("=");
+                    Ast.Expr value = parseExpression();
+                    return new Ast.Stmt.Assignment(name, value);
+                } else {
+                    // name()
+                    match(";");
+                    return new Ast.Stmt.Expression(name);
+                }
+            } else {
+                if (tokens.has(0))
+                    throw new ParseException("Index: ", tokens.get(0).getIndex());
+                else
+                    throw new ParseException("Index: ", parseExIndex());
+            }
         }
     }
 
@@ -81,7 +142,23 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Stmt.Declaration parseDeclarationStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("LET");
+
+        if (!match(Token.Type.IDENTIFIER)){
+            throw new ParseException("Expected identifier", tokens.get(0).getIndex());
+        }
+
+        String name = tokens.get(-1).getLiteral();
+        Optional<Ast.Expr> value = Optional.empty();
+
+        if (match("=")){
+            value = Optional.of(parseExpression());
+        }
+        if(!match(";")){
+            throw new ParseException("Expected semicolon",tokens.get(0).getIndex());
+        }
+
+        return new Ast.Stmt.Declaration(name, value);
     }
 
     /**
@@ -90,7 +167,26 @@ public final class Parser {
      * {@code IF}.
      */
     public Ast.Stmt.If parseIfStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("IF");
+
+        Ast.Expr condition = parseExpression();
+        List<Ast.Stmt> thenStmt = new ArrayList<>();
+        List<Ast.Stmt> elseStmt = new ArrayList<>();
+
+        if (!match("DO")){
+            throw new ParseException("Expected DO", tokens.get(0).getIndex());
+        }
+        thenStmt.add(parseStatement());
+
+        if (match("ELSE")){
+            elseStmt.add(parseStatement());
+        }
+
+        if (!match("END")){
+            throw new ParseException("Expected END", tokens.get(0).getIndex());
+        }
+
+        return new Ast.Stmt.If(condition, thenStmt, elseStmt);
     }
 
     /**
@@ -99,7 +195,31 @@ public final class Parser {
      * {@code FOR}.
      */
     public Ast.Stmt.For parseForStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("FOR");
+
+        if (!match(Token.Type.IDENTIFIER)){
+            throw new ParseException("Expected identifier", tokens.get(0).getIndex());
+        }
+        String name = tokens.get(-1).getLiteral();
+
+        if (!match("IN")){
+            throw new ParseException("Expected IN", tokens.get(0).getIndex());
+        }
+
+        Ast.Expr value = parseExpression();
+
+        if (!match("DO")){
+            throw new ParseException("Expected DO", tokens.get(0).getIndex());
+        }
+
+        List<Ast.Stmt> stmt = new ArrayList<>();
+        stmt.add(parseStatement());
+
+        if (!match("END")){
+            throw new ParseException("Expected END", tokens.get(0).getIndex());
+        }
+
+        return new Ast.Stmt.For(name, value, stmt);
     }
 
     /**
@@ -108,7 +228,23 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Stmt.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("WHILE");
+
+        Ast.Expr condition;
+        condition = parseExpression();
+
+        if (!match("DO")){
+            throw new ParseException("Expected DO",tokens.get(0).getIndex());
+        }
+
+        List<Ast.Stmt> stmt = new ArrayList<>();
+        stmt.add(parseStatement());
+
+        if (!match("END")){
+            throw new ParseException("Expected END", tokens.get(0).getIndex());
+        }
+
+        return new Ast.Stmt.While(condition, stmt);
     }
 
     /**
@@ -117,7 +253,15 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("RETURN");
+
+        Ast.Expr value = parseExpression();
+
+        if (!match(";")){
+            throw new ParseException("Expected semicolon", tokens.get(0).getIndex());
+        }
+
+        return new Ast.Stmt.Return(value);
     }
 
     /**
@@ -193,7 +337,7 @@ public final class Parser {
      */
     public Ast.Expr parseSecondaryExpression() throws ParseException {
         String name;
-        List<Ast.Expr> arguments = new ArrayList<Ast.Expr>();
+        List<Ast.Expr> arguments = new ArrayList<>();
         Ast.Expr left = parsePrimaryExpression();
         if (peek(".")) {
             while (peek(".")) {
@@ -231,7 +375,7 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expr parsePrimaryExpression() throws ParseException {
-        List<Ast.Expr> arguments = new ArrayList<Ast.Expr>();
+        List<Ast.Expr> arguments = new ArrayList<>();
         // nil
         if (match("NIL"))
             return new Ast.Expr.Literal(null);
