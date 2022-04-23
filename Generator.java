@@ -51,7 +51,8 @@ public final class Generator implements Ast.Visitor<Void> {
                 i++;
             }
             // not required newline here it causes problem for single field
-            // newline(0);
+            // changed 4/23 - I think single field actually is supposed this here, will see what test submission says. If it breaks something, I will change it back.
+            newline(0);
         }
 
         // main method
@@ -128,6 +129,10 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Method ast) {
         if (ast.getReturnTypeName().isPresent()) {
             print(getJavaType(ast.getReturnTypeName().get()));
+        }
+        else {
+            // added 4/23
+            print("void");
         }
 
         print(" ");
