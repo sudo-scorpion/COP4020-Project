@@ -12,7 +12,7 @@ import java.util.List;
  * - {@link CharStream}, which manages the state of the lexer and literals
  * <p>
  * If the lexer fails to parse something (such as an unterminated string) you
- * should throw a {@link ParseException} with an index at the character which is
+ * should throw a {@link //ParseException} with an index at the character which is
  * invalid or missing.
  * <p>
  * The {@link #peek(String...)} and {@link #match(String...)} functions are
@@ -216,7 +216,7 @@ public final class Lexer {
      * <p>
      * You should rely on peek/match for state management in nearly all cases.
      * The only field you need to access is {@link #index} for any {@link
-     * ParseException} which is thrown.
+     * //ParseException} which is thrown.
      */
     public static final class CharStream {
 
